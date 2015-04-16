@@ -57,3 +57,6 @@ for (i in 2:dim(ismember.user)[1]) {
   }
 }
 
+# choose sample to test
+time <- as.character(ismember.user$time)
+real.time <- as.Date(time, format = "%y-%m-%d %H")
