@@ -6,9 +6,12 @@ cur_dir <- getwd()
 setwd(data_dir)
 # read data
 item <- read.csv(item_file)
+item$item_geohash <- as.character(item$item_geohash)
 user <- read.csv(user_file)
+user$user_geohash <- as.character(user$user_geohash)
+user$time <- as.Date(user$time, format = "%Y-%m-%d %H")
 #duplicated and order
-dup.user <- user[!duplicated(user[c("user_id","item_id","time")]),]
+dup.user <- user[!duplicated(user[c("user_id","item_id")]),]
 order.user <- dup.user[order(dup.user["user_id"]),]
 dup.item <- item[!duplicated(item[c("item_id","item_category","item_geohash")]),]
 order.item <- dup.item[order(dup.item["item_id"]),]
@@ -16,47 +19,18 @@ ismember.user <- order.user[order.user$item_id %in% order.item$item_id,]
 # length
 len.item <- dim(order.item)[1]
 len.user <- length(unique(ismember.user$user_id))
+########################################################################################################
+#predict parameter
+train_start <- '2014-11-17'
+train_end <- '2014-12-18'
+train_label_start <- '2014-12-18'
+train_label_end <- '2014-12-19'
+test_start <- '2014-12-18'
+test_end <- '2014-12-19'
+test_label_start <- ''
+test_label_end <- ''
 
-
-
-# user calculation
-uni.uid <- unique(ismember.user$user_id)
-len.uid <- length(uni.uid)
-user.feature <- matrix(0, nrow = len.uid, ncol = 4)
-p <- 1
-curr.uid <- ismember.user$user_id[1]
-user.feature[1,ismember.user$behavior_type[p]] <- 1
-for (i in 2:dim(ismember.user)[1]) {
-  if (curr.uid == ismember.user$user_id[i]){
-    user.feature[p,ismember.user$behavior_type[i]] <- user.feature[p,ismember.user$behavior_type[i]] + 1
-  }
-  else{
-    p <- p + 1
-    user.feature[p,ismember.user$behavior_type[i]] <- 1
-    curr.uid <- ismember.user$user_id[i]
-  }
-}
-
-
-# item calculation
-ismember.user <- ismember.user[order(ismember.user$item_id),]
-uni.iid <- unique(ismember.user$item_id)
-len.iid <- length(uni.iid)
-item.feature <- matrix(0, nrow = len.iid, ncol = 4)
-p <- 1
-curr.iid <- ismember.user$item_id[1]
-item.feature[1,ismember.user$behavior_type[p]] <- 1
-for (i in 2:dim(ismember.user)[1]) {
-  if (curr.iid == ismember.user$item_id[i]){
-    item.feature[p,ismember.user$behavior_type[i]] <- item.feature[p,ismember.user$behavior_type[i]] + 1
-  }
-  else{
-    p <- p + 1
-    item.feature[p,ismember.user$behavior_type[i]] <- 1
-    curr.iid <- ismember.user$item_id[i]
-  }
-}
-
-# choose sample to test
-time <- as.character(ismember.user$time)
-real.time <- as.Date(time, format = "%y-%m-%d %H")
+#train_pos <- unique()
+data.train_pos_label <- ismember.user[time %between% c(train_label_start,train_label_end)]
+uipair.train_pos_label <- unique(ismember.user[c("user_id","item_id")])
+train_pos_data <- ismember.user[time %between% c(train_start,train_end), ]
