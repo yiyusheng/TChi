@@ -11,11 +11,14 @@ load('TChi_trainset_testset_specuser.Rda')
 
 # featureA: count number of three behavior type and time before predict
 featureA <- function(ds,last_date) {
+  max_len = 1000
   ds$time_before <- last_date - ds$time
   ds <- ds[,c('user_id','item_id','behavior_type','time_before')]
   ds <- ds[with(ds, order(user_id,item_id)),]
   
   uipair <- ds[!duplicated(ds[c('user_id','item_id')]),]
+  len_uipair <- dim(uipair)[1]
+  uipair <- uipair[1:min(len_uipair,max_len),]
   len_uipair <- dim(uipair)[1]
   ftr <- matrix(0,nrow = len_uipair,ncol = 8)
   # bt* means count number of behavior *
@@ -29,6 +32,10 @@ featureA <- function(ds,last_date) {
     ftr[i,c('user_id','item_id')] <- c(curr_ui$user_id,curr_ui$item_id)
     curr_data_btA = subset(curr_data, behavior_type == 1)
     ftr[i,c('btA','btA_t')] <- c(dim(curr_data_btA)[1],mean(curr_data_btA$time_before))
+    curr_data_btB = subset(curr_data, behavior_type == 2)
+    ftr[i,c('btB','btB_t')] <- c(dim(curr_data_btB)[1],mean(curr_data_btB$time_before))
+    curr_data_btC = subset(curr_data, behavior_type == 3)
+    ftr[i,c('btC','btC_t')] <- c(dim(curr_data_btC)[1],mean(curr_data_btC$time_before))
     print(i)
   }
   return(ftr)
@@ -51,3 +58,4 @@ print('test_pos')
 ftr.test_pos <- featureA(data.test_pos_rmna,train_end)
 print('test_neg')
 ftr.test_neg <- featureA(data.test_neg,train_end)
+save(ftr.test_neg,ftr.test_pos,ftr.train_neg,ftr.train_pos,file = 'TChi_featureA.Rda')

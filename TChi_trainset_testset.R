@@ -5,34 +5,34 @@ cur_dir <- getwd()
 # change wd to read data
 setwd(data_dir)
 ########################################################################################################
-# item_file <- 'tianchi_mobile_recommend_train_item.csv'
-# user_file <- 'tianchi_mobile_recommend_train_user.csv'
-# # read data
-# item <- read.csv(item_file)
-# user <- read.csv(user_file)
-# #duplicated and order
-# dup.user <- user[!duplicated(user[c("user_id","item_id","time")]),]
-# order.user <- dup.user[order(dup.user["user_id"]),]
-# dup.item <- item[!duplicated(item[c("item_id","item_category","item_geohash")]),]
-# order.item <- dup.item[order(dup.item["item_id"]),]
-# ismember.user <- order.user[order.user$item_id %in% order.item$item_id,]
-# # length
-# len.item <- dim(order.item)[1]
-# len.user <- length(unique(ismember.user$user_id))
-# # rename and save
-# data.specuser <- ismember.user
-# data.alluser <- order.user
-# data.item <- order.item
-# # type convert
-# data.item$item_geohash <- as.character(data.item$item_geohash)
-# data.specuser$user_geohash <- as.character(data.specuser$user_geohash)
-# data.specuser$time <- as.Date(data.specuser$time, format = "%Y-%m-%d %H")
-# data.alluser$user_geohash <- as.character(data.alluser$user_geohash)
-# data.alluser$time <- as.Date(data.alluser$time, format = "%Y-%m-%d %H")
-# save(data.specuser,data.alluser,data.item,file = 'TChi_data.Rda')
+item_file <- 'tianchi_mobile_recommend_train_item.csv'
+user_file <- 'tianchi_mobile_recommend_train_user.csv'
+# read data
+item <- read.csv(item_file)
+user <- read.csv(user_file)
+#duplicated and order
+dup.user <- user[!duplicated(user[c("user_id","item_id","time")]),]
+order.user <- dup.user[order(dup.user["user_id"]),]
+dup.item <- item[!duplicated(item[c("item_id","item_category","item_geohash")]),]
+order.item <- dup.item[order(dup.item["item_id"]),]
+ismember.user <- order.user[order.user$item_id %in% order.item$item_id,]
+# length
+len.item <- dim(order.item)[1]
+len.user <- length(unique(ismember.user$user_id))
+# rename and save
+data.specuser <- ismember.user
+data.alluser <- order.user
+data.item <- order.item
+# type convert
+data.item$item_geohash <- as.character(data.item$item_geohash)
+data.specuser$user_geohash <- as.character(data.specuser$user_geohash)
+data.specuser$time <- as.Date(data.specuser$time, format = "%Y-%m-%d %H")
+data.alluser$user_geohash <- as.character(data.alluser$user_geohash)
+data.alluser$time <- as.Date(data.alluser$time, format = "%Y-%m-%d %H")
+save(data.specuser,data.alluser,data.item,file = 'TChi_data.Rda')
 ########################################################################################################
 load('TChi_data.Rda')
-user = data.alluser
+user = data.specuser
 #predict parameter
 train_start <- as.Date('2014-11-18')
 train_end <- as.Date('2014-12-17')
@@ -85,7 +85,7 @@ label.test <- label.test[,!(names(label.test) %in% drops)]
 data.test <- data.test[,!(names(data.test) %in% drops)]
 save(data.train_neg,data.train_pos,data.train_pos_rmna,
      data.test_neg,data.test_pos,data.test_pos_rmna,
-     file = 'TChi_trainset_testset_alluser.Rda')
+     file = 'TChi_trainset_testset_specuser.Rda')
 
 
 
