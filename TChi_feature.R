@@ -2,7 +2,6 @@
 # feature extraction 
 rm(list = ls())
 data_dir <- "D:/Data/TChi/"
-cur_dir <- getwd()
 
 featureA <- function(ds,last_date,max_len) {
   ds$time_before <- last_date - ds$time
@@ -41,14 +40,14 @@ featureA <- function(ds,last_date,max_len) {
 
 # change wd to read data
 setwd(data_dir)
-inter_train = c(25,15,7,3)
-inter_test = c(1,3,5,7)
-rate.pos_neg = 10
+inter_train = c(25,15)
+inter_test = c(1,3)
+rate.pos_neg = 50
 test_label_start <- as.Date('2014-12-18')
 for (itr in inter_train) {
   for (ite in inter_test) {
-    for (suffix in c('spec','all')){
-      if (itr == 25 & (ite != 1 & ite != 3))next
+    for (suffix in c('all')){
+#       if (ite == 3 & (itr != 25))next
       #load
       out_file = paste('TChi_featureA_',suffix,'_',itr,'_',ite,'.Rda',sep='')
       file_name = paste('TChi_trainset_testset_',suffix,'user_',itr,'_',ite,'.Rda', sep='') 

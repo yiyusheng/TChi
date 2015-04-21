@@ -1,6 +1,5 @@
 rm(list = ls())
 data_dir <- "D:/Data/TChi/"
-cur_dir <- getwd()
 
 # change wd to read data
 setwd(data_dir)
@@ -9,16 +8,16 @@ load('TChi_data.Rda')
 #vari_trainlabel: 
 #1 means range of trainlabel equals to range of testdata
 #0 means range of trainlabel equals to the first day of testdata
-vari_trainlabel <- 0
-inter_train = c(25,15,7,3)
-inter_test = c(1,3,5,7)
-# inter_train = c(25,15,7)
-# inter_test = c(1,3)
+vari_trainlabel <- 1
+# inter_train = c(25,15,7,3)
+# inter_test = c(1,3,5,7)
+inter_train = c(25,15)
+inter_test = c(1,3)
 test_label_start <- as.Date('2014-12-18')
 for (itr in inter_train) {
   for (ite in inter_test) {
-    if (ite == 3 & (itr != 25))next
-        print(paste('inter_train:',itr,'inter_test:',ite))
+#     if (ite == 3 & (itr != 25))next
+        print(paste('TRAINSET_TESTSET: inter_train:',itr,'inter_test:',ite))
         #predict parameter
         #     train_start <- as.Date('2014-11-18')
         #     train_end <- train_start + itr
@@ -38,7 +37,7 @@ for (itr in inter_train) {
         train_end <- train_label_start
         train_start <- train_end - itr
         # specitem
-        for (i in 1:2) {
+        for (i in 2) {
           if (i == 1) {
             user = data.specuser
             out_file = paste('TChi_trainset_testset_specuser_',itr,'_',ite,'.Rda', sep='')   

@@ -1,29 +1,22 @@
 # use svm to establish models
 rm(list = ls())
-data_dir <- "D:/Data/TChi/"
-cur_dir <- getwd()
+data_dir <- "D:/Data/TChi/fixtestlabel_varitrainlabel"
 library(e1071)
 library(gplots)
 library(ROCR)
-# change wd to read data
-setwd(data_dir)
-
-rm(list = ls())
-data_dir <- "D:/Data/TChi/"
-cur_dir <- getwd()
 
 # change wd to read data
 setwd(data_dir)
-inter_train = c(25,15,7,3)
-inter_test = c(1,3,5,7)
+inter_train = c(25,15)
+inter_test = c(1,3)
 test_label_start <- as.Date('2014-12-18')
 frame.result <- as.data.frame(matrix(0,nrow = 3,ncol = 0))
 
 # loop start
 for (itr in inter_train) {
   for (ite in inter_test) {
-    for (suf in c('spec','all')){
-      if (itr == 25 & (ite != 1 & ite != 3))next
+    for (suf in c('all')){
+#       if (ite == 3 & (itr != 25))next
       column_name = paste(suf,'_',itr,'_',ite,sep='')
       file_suf = paste(column_name,'.Rda',sep='')
       in_file = paste('TChi_featureA_',file_suf,sep='')
