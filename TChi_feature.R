@@ -4,18 +4,19 @@ rm(list = ls())
 data_dir <- "D:/Data/TChi/"
 cur_dir <- getwd()
 
-featureA <- function(ds,last_date) {
-  max_len = 5000
+featureA <- function(ds,last_date,max_len) {
   ds$time_before <- last_date - ds$time
   ds <- ds[,c('user_id','item_id','behavior_type','time_before')]
   ds <- ds[with(ds, order(user_id,item_id)),]   #order
   
   uipair <- ds[!duplicated(ds[c('user_id','item_id')]),]
-  len_uipair <- dim(uipair)[1]
-  #uipair <- uipair[1:min(len_uipair,max_len),]
-  randidx.uipair <- ceiling(runif(min(len_uipair,max_len),1,len_uipair))
-  uipair <- uipair[randidx.uipair,]
-  len_uipair <- dim(uipair)[1]
+  len_uipair <- nrow(uipair)
+  if (max_len == 0){}
+  else {
+    randidx.uipair <- ceiling(runif(min(len_uipair,max_len),1,len_uipair))
+    uipair <- uipair[randidx.uipair,]
+  }
+  len_uipair <- nrow(uipair)
   ftr <- matrix(0,nrow = len_uipair,ncol = 8)
   #ds reduce
   reduce.ds <- merge(ds,uipair)
@@ -35,19 +36,19 @@ featureA <- function(ds,last_date) {
     curr_data_btC = subset(curr_data, behavior_type == 3)
     ftr[i,c('btC','btC_t')] <- c(dim(curr_data_btC)[1],mean(curr_data_btC$time_before))
   }
-  return(ftr)
+  return(list('feature' = ftr,'uipair_len' = len_uipair))
 }
 
 # change wd to read data
 setwd(data_dir)
-inter_train = c(3,7,15,25)
+inter_train = c(25,15,7,3)
 inter_test = c(1,3,5,7)
+rate.pos_neg = 10
 test_label_start <- as.Date('2014-12-18')
 for (itr in inter_train) {
   for (ite in inter_test) {
     for (suffix in c('spec','all')){
-      if (itr == 25 & itr != 1)
-        continue
+      if (itr == 25 & (ite != 1 & ite != 3))next
       #load
       out_file = paste('TChi_featureA_',suffix,'_',itr,'_',ite,'.Rda',sep='')
       file_name = paste('TChi_trainset_testset_',suffix,'user_',itr,'_',ite,'.Rda', sep='') 
@@ -62,41 +63,18 @@ for (itr in inter_train) {
       train_end <- train_label_start
       train_start <- train_end - itr
       print('train_pos')
-      ftr.train_pos <- featureA(data.train_pos_rmna,train_end)
+      r <- featureA(data.train_pos_rmna,train_end,0)
+      ftr.train_pos <- r$feature
       print('train_neg')
-      ftr.train_neg <- featureA(data.train_neg,train_end)
+      r <- featureA(data.train_neg,train_end,r$uipair_len*rate.pos_neg)
+      ftr.train_neg <- r$feature
       print('test_pos')
-      ftr.test_pos <- featureA(data.test_pos_rmna,train_end)
+      r <- featureA(data.test_pos_rmna,train_end,0)
+      ftr.test_pos <- r$feature
       print('test_neg')
-      ftr.test_neg <- featureA(data.test_neg,train_end)
+      r <- featureA(data.test_neg,train_end,r$uipair_len*rate.pos_neg)
+      ftr.test_neg <- r$feature
       save(ftr.test_neg,ftr.test_pos,ftr.train_neg,ftr.train_pos,file = out_file)
     }
   }
 }
-
-
-
-
-
-# 
-# out_file = paste('TChi_trainset_testset_specuser_',itr,'_',ite,'.Rda', sep='')   
-# ut_file = paste('TChi_trainset_testset_alluser_',itr,'_',ite,'.Rda', sep='')  
-# load('TChi_trainset_testset_specuser.Rda')
-# #predict parameter
-# train_start <- as.Date('2014-11-18')
-# train_end <- as.Date('2014-12-17')
-# train_label_start <- as.Date('2014-12-17')
-# train_label_end <- as.Date('2014-12-18')
-# test_start <- as.Date('2014-12-17')
-# test_end <- as.Date('2014-12-18')
-# test_label_start <- as.Date('2014-12-18')
-# test_label_end <- as.Date('2014-12-19')
-# print('train_pos')
-# ftr.train_pos <- featureA(data.train_pos_rmna,train_end)
-# print('train_neg')
-# ftr.train_neg <- featureA(data.train_neg,train_end)
-# print('test_pos')
-# ftr.test_pos <- featureA(data.test_pos_rmna,train_end)
-# print('test_neg')
-# ftr.test_neg <- featureA(data.test_neg,train_end)
-# save(ftr.test_neg,ftr.test_pos,ftr.train_neg,ftr.train_pos,file = 'TChi_featureA.Rda')
