@@ -60,6 +60,7 @@ data_seperate <- function(data.alluser,data.item,
          data.train_pos,data.train_pos_rmna,
          data.test,
          file = out_file)
+    print(paste('end_time:',date()))
 }
 
 ####################################################################################################################
@@ -92,9 +93,11 @@ feature_each <- function(ds,
     ftr[,c('user_id','item_id','ui')] <- uipair
     for (i in 1:3) {
       sset <- subset(reduce.ds,behavior_type == i)
-      a <- tapply(sset$ui,sset$ui,length)
-      b <- tapply(sset$time_before,sset$ui,mean)
-      ftr[match(rownames(a),ftr$ui),c(colname[i+3],colname[i+6])] <- c(as.numeric(a),as.numeric(b))      
+      ff <- as.numeric(sset$ui)
+      a <- tapply(sset$ui,ff,length)
+      b <- tapply(sset$time_before,ff,mean)
+      c <- unique(as.character(sset$ui))
+      ftr[match(c,ftr$ui),c(colname[i+3],colname[i+6])] <- c(as.numeric(a),as.numeric(b))      
     }
   # return
     return(list('feature' = ftr,'uipair_len' = len_uipair))
@@ -124,19 +127,20 @@ feature_all <- function(test_label_start,
     train_end <- train_label_start
     train_start <- train_end - itr
   # feature_each
-    print('train_pos')
+    print(paste('train_pos: ', nrow(data.train_pos_rmna), 'lines',sep=''))
     r <- feature_each(data.train_pos_rmna,test_end,0)
     ftr.train_pos <- r$feature
-    print('train_neg')
+    print(paste('train_neg: ', nrow(data.train_neg), 'lines',sep=''))
     r <- feature_each(data.train_neg,test_end,r$uipair_len*rate.pos_neg)
     ftr.train_neg <- r$feature
-    print('test')
+    print(paste('test: ', nrow(data.test), 'lines',sep=''))
     r <- feature_each(data.test,test_end,0)
     ftr.test <- r$feature
   # save
     file_name <- paste(file_out_predix,itr,ite,vari_trainlabel,rate.pos_neg,sep='_')
     out_file <- paste(out_dir,file_name,'.Rda',sep = '')
     save(ftr.test,ftr.train_neg,ftr.train_pos,file = out_file)
+    print(paste('end_time:',date()))
 }
 
 ####################################################################################################################
@@ -183,12 +187,13 @@ svmf <- function(test_label_start,
     #perf <- data.frame(predict = num.result, real = y)
   
   # predict result and save
-    pred_posui <- ftr.test[num.result,1:2]
+    pred_posui <- ftr.test[num.result == 1,1:2]
     file_name <- paste(file_out_predix,itr,ite,vari_trainlabel,rate.pos_neg,sep='_')
     out_file <- paste(out_dir,file_name,'.Rda',sep='')
     csv_name <- paste(out_dir,file_name,'.csv',sep='')
     write.csv(file = csv_name, x = pred_posui)
     save(pred_posui,file = out_file)
+    print(paste('end_time:',date()))
 }
 
 
