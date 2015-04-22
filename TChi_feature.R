@@ -42,12 +42,12 @@ featureA <- function(ds,last_date,max_len) {
 setwd(data_dir)
 inter_train = c(25,15)
 inter_test = c(1,3)
-rate.pos_neg = 50
-test_label_start <- as.Date('2014-12-18')
+rate.pos_neg = 10
+test_label_start <- as.Date('2014-12-19')
 for (itr in inter_train) {
   for (ite in inter_test) {
     for (suffix in c('all')){
-#       if (ite == 3 & (itr != 25))next
+      if (ite == 3 & itr == 7)next
       #load
       out_file = paste('TChi_featureA_',suffix,'_',itr,'_',ite,'.Rda',sep='')
       file_name = paste('TChi_trainset_testset_',suffix,'user_',itr,'_',ite,'.Rda', sep='') 
@@ -62,18 +62,22 @@ for (itr in inter_train) {
       train_end <- train_label_start
       train_start <- train_end - itr
       print('train_pos')
-      r <- featureA(data.train_pos_rmna,train_end,0)
+      r <- featureA(data.train_pos_rmna,test_end,0)
       ftr.train_pos <- r$feature
       print('train_neg')
-      r <- featureA(data.train_neg,train_end,r$uipair_len*rate.pos_neg)
+      r <- featureA(data.train_neg,test_end,r$uipair_len*rate.pos_neg)
       ftr.train_neg <- r$feature
-      print('test_pos')
-      r <- featureA(data.test_pos_rmna,train_end,0)
-      ftr.test_pos <- r$feature
-      print('test_neg')
-      r <- featureA(data.test_neg,train_end,r$uipair_len*rate.pos_neg)
-      ftr.test_neg <- r$feature
-      save(ftr.test_neg,ftr.test_pos,ftr.train_neg,ftr.train_pos,file = out_file)
+      print('test')
+      r <- featureA(data.test,test_end,0)
+      ftr.test <- r$feature
+#       print('test_pos')
+#       r <- featureA(data.test_pos_rmna,train_end,0)
+#       ftr.test_pos <- r$feature
+#       print('test_neg')
+#       r <- featureA(data.test_neg,train_end,r$uipair_len*rate.pos_neg)
+#       ftr.test_neg <- r$feature
+#       save(ftr.test_neg,ftr.test_pos,ftr.train_neg,ftr.train_pos,file = out_file)
+      save(ftr.test,ftr.train_neg,ftr.train_pos,file = out_file)
     }
   }
 }
