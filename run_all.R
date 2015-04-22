@@ -21,8 +21,4 @@
   
 # EXEC
   data_seperate(data.alluser,data.item,test_label_start,itr, ite,vari_trainlabel,out_file)
-
-# test
-  system.time(a <- paste(data.specuser$user_id,data.specuser$item_id,sep='_'))
-  system.time(b <- data.specuser$item_id[1:1000]*10000L+data.specuser$user_id )
   

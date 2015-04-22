@@ -3,11 +3,9 @@
 #     order
 #     item set filter
 
+# change wd to read data
 rm(list = ls())
 data_dir <- "D:/Data/TChi/"
-cur_dir <- getwd()
-
-# change wd to read data
 setwd(data_dir)
 item_file <- 'tianchi_mobile_recommend_train_item_0420.csv'
 user_file_0402 <- 'tianchi_mobile_recommend_train_user_0402.csv'
@@ -36,11 +34,11 @@ data.specuser$time <- as.Date(data.specuser$time, format = "%Y-%m-%d %H")
 data.alluser$user_geohash <- as.character(data.alluser$user_geohash)
 data.alluser$time <- as.Date(data.alluser$time, format = "%Y-%m-%d %H")
 # ui column generate (user_id item_id paste)
-data.alluser$ui <- paste(data.alluser$user_id,data.alluser$item_id,'_')
-data.specuser$ui <- paste(data.specuser$user_id,data.specuser$item_id,'_')
+data.alluser$ui <- paste(data.alluser$user_id,data.alluser$item_id,sep='_')
+data.specuser$ui <- paste(data.specuser$user_id,data.specuser$item_id,sep='_')
 # ic column generate (item_id item_category)
-data.alluser$ic <- paste(data.alluser$item_category,data.alluser$item_id,'_')
-data.specuser$ic <- paste(data.specuser$item_category,data.specuser$item_id,'_')
-data.item$ic <- paste(data.item$item_category,data.item$item_category,'_')
+data.alluser$ic <- paste(data.alluser$item_category,data.alluser$item_id,sep='_')
+data.specuser$ic <- paste(data.specuser$item_category,data.specuser$item_id,sep='_')
+data.item$ic <- paste(data.item$item_category,data.item$item_category,sep='_')
 # save
 save(data.specuser,data.alluser,data.item,file = 'TChi_data.Rda')

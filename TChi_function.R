@@ -39,9 +39,9 @@ data_seperate <- function(data.alluser,
     
   # train
     data.train <- subset(user, time >= train_start & time < train_end)
-    label.train <- subset(user[c('user_id','item_id','time','behavior_type')], time >= train_label_start & 
+    label.train <- subset(user[c('user_id','item_id','time','behavior_type','ui')], time >= train_label_start & 
                             time < train_label_end & behavior_type == 4)
-    label.train <- label.train[!duplicated(label.train[c('user_id','item_id')]),c('user_id','item_id')]
+    label.train <- label.train[!duplicated(label.train['ui']),c('user_id','item_id','ui')]
     
     
   # posivite data of train (UIpair in label.train)
