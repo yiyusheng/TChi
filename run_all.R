@@ -29,21 +29,21 @@
   out_dir <- Data_dir
   
 # # load data
-  load(paste(Data_dir,'TChi_data.Rda',sep=''))
-#   
-# # EXEC
+#   load(paste(Data_dir,'TChi_data.Rda',sep=''))
+# #   
+# # # EXEC
 #   data_seperate(data.alluser,data.item,
 #                 test_label_start,
 #                 itr, ite,
 #                 vari_trainlabel,
 #                 Data_dir,file_sep_predix)
    
-#   feature_all(test_label_start,
-#               itr,ite,
-#               vari_trainlabel,
-#               rate.pos_neg,
-#               in_dir,file_sep_predix,
-#               out_dir,file_feature_predix)
+  feature_all(test_label_start,
+              itr,ite,
+              vari_trainlabel,
+              rate.pos_neg,
+              in_dir,file_sep_predix,
+              out_dir,file_feature_predix)
 #   
 #   svmf(test_label_start,
 #        itr,ite,

@@ -60,6 +60,7 @@ data_seperate <- function(data.alluser,data.item,
          data.train_pos,data.train_pos_rmna,
          data.test,
          file = out_file)
+    print('end time:',date())
 }
 
 ####################################################################################################################
@@ -92,9 +93,11 @@ feature_each <- function(ds,
     ftr[,c('user_id','item_id','ui')] <- uipair
     for (i in 1:3) {
       sset <- subset(reduce.ds,behavior_type == i)
-      a <- tapply(sset$ui,sset$ui,length)
-      b <- tapply(sset$time_before,sset$ui,mean)
-      ftr[match(rownames(a),ftr$ui),c(colname[i+3],colname[i+6])] <- c(as.numeric(a),as.numeric(b))      
+      ff <- as.numeric(sset$ui)
+      a <- tapply(sset$ui,ff,length)
+      b <- tapply(sset$time_before,ff,mean)
+      c <- unique(sset$ui)
+      ftr[match(ftr$ui,c),c(colname[i+3],colname[i+6])] <- c(as.numeric(a),as.numeric(b))      
     }
   # return
     return(list('feature' = ftr,'uipair_len' = len_uipair))
@@ -137,6 +140,7 @@ feature_all <- function(test_label_start,
     file_name <- paste(file_out_predix,itr,ite,vari_trainlabel,rate.pos_neg,sep='_')
     out_file <- paste(out_dir,file_name,'.Rda',sep = '')
     save(ftr.test,ftr.train_neg,ftr.train_pos,file = out_file)
+    print('end time:',date())
 }
 
 ####################################################################################################################
@@ -189,6 +193,7 @@ svmf <- function(test_label_start,
     csv_name <- paste(out_dir,file_name,'.csv',sep='')
     write.csv(file = csv_name, x = pred_posui)
     save(pred_posui,file = out_file)
+    print('end time:',date())
 }
 
 
