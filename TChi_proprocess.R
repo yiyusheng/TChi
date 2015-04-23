@@ -58,9 +58,9 @@
   data.alluser$time <- as.POSIXct(data.alluser$time, format = "%Y-%m-%d %H")
 
 # item_geohash add
-  data.alluser$item_geohash <- rep(0,nrow(data.alluser))
+  data.alluser$item_geohash <- rep(1,nrow(data.alluser))
   data.alluser$item_geohash[match(item$item_id,data.alluser$item_id)] <- data.item$item_geohash
-  data.specuser$item_geohash <- rep(0,nrow(data.specuser))
+  data.specuser$item_geohash <- rep(1,nrow(data.specuser))
   data.specuser$item_geohash[match(item$item_id,data.specuser$item_id)] <- data.item$item_geohash
 
 # ui column generate (user_id item_id paste)
@@ -71,4 +71,4 @@
   data.specuser$ic <- as.factor(data.specuser$item_category*10000000000+data.specuser$item_id)
   data.item$ic <- as.factor(data.item$item_category*10000000000+data.item$item_category)
 # save
-  save(data.specuser,data.alluser,data.item,file = 'TChi_data.Rda')
+  save(data.specuser,data.alluser,data.item,file = paste(Data_dir,'TChi_data.Rda',sep=''))
