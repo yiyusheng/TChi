@@ -46,8 +46,8 @@ data_seperate <- function(user,data.item,
   data.train_neg <- subset(data.train, !(data.train$ui %in% label.train$ui))
   
   # test: reduce by match item in data.item
-  data.test <- subset(user, time >= test_start & time < test_end)
-  data.test <- subset(data.test, data.test$item_id %in% data.item$item_id)
+  data.test <- subset(user, time >= test_start & time < test_end 
+                      & data.test$item_id %in% data.item$item_id)
   
   # save
   file_name <- paste(file_out_predix,itr,ite,vari_trainlabel,sep='_')
@@ -170,11 +170,13 @@ svmf <- function(test_label_start,
   num_field <- c('user_geohash','item_category','item_geohash',
                  'btA','btB','btC',
                  'btA_t','btB_t','btC_t')
+#   num_field <- c('btA','btB','btC',
+#                  'btA_t','btB_t','btC_t')
   x <- ftr.train[,num_field]
   x <- as.matrix(x)
-  y <- as.numeric(ftr.train[,ncol(ftr.train)])
+  y <- as.numeric(ftr.train$class)
   df <- data.frame(x = x, y = y)
-  model <- svm(y ~ x, data = df, type="C-classification", cost = 1, kernel = 'radial', prob = TRUE)
+  model <- svm(y ~ x, data = df, type="C-classification", cost = 10, kernel = 'radial', prob = TRUE)
   
   # test
   x <- ftr.test[,num_field]
