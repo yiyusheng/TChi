@@ -27,55 +27,41 @@
   in_dir <- Data_dir
   out_dir <- Data_dir
   
-<<<<<<< HEAD
 # load data
- load(paste(Data_dir,'TChi_data.Rda',sep=''))
+  load(paste(Data_dir,'TChi_data.Rda',sep=''))
 
-=======
-# # load data
-#   load(paste(Data_dir,'TChi_data.Rda',sep=''))
-# #   
-# # # EXEC
->>>>>>> origin/master
-#   data_seperate(data.alluser,data.item,
-#                 test_label_start,
-#                 itrain[1], itest[1],
-#                 vari_trainlabel,
-<<<<<<< HEAD
-#                 in_dir,file_sep_predix)
 # EXEC function
-exec <- function(data.alluser,data.item,
-                 test_label_start,
-                 itr, ite, rate.pos_neg,
-                 vari_trainlabel,
-                 file_sep_predix,
-                 file_feature_predix,
-                 file_svm_predix,
-                 in_dir,out_dir) {
-  print(paste(itr,ite,rate.pos_neg))
-  data_seperate(data.alluser,data.item,
-                test_label_start,
-                itr, ite,
+  exec <- function(data.alluser,data.item,
+                   test_label_start,
+                   itr, ite, rate.pos_neg,
+                   vari_trainlabel,
+                   file_sep_predix,
+                   file_feature_predix,
+                   file_svm_predix,
+                   in_dir,out_dir) {
+    
+    print(paste(itr,ite,rate.pos_neg))
+    
+    data_seperate(data.alluser,data.item,
+                  test_label_start,
+                  itr, ite,
+                  vari_trainlabel,
+                  in_dir,file_sep_predix)
+  
+    feature_all(test_label_start,
+                itr,ite,
                 vari_trainlabel,
-                in_dir,file_sep_predix)
-=======
-#                 Data_dir,file_sep_predix)
-   
->>>>>>> origin/master
-  feature_all(test_label_start,
-              itr,ite,
-              vari_trainlabel,
-              rate.pos_neg,
-              in_dir,file_sep_predix,
-              out_dir,file_feature_predix)
-<<<<<<< HEAD
-  svmf(test_label_start,
-       itr,ite,
-       vari_trainlabel,
-       rate.pos_neg,
-       in_dir,file_feature_predix,
-       out_dir,file_svm_predix)  
-}
+                rate.pos_neg,
+                in_dir,file_sep_predix,
+                out_dir,file_feature_predix)
+  
+    svmf(test_label_start,
+         itr,ite,
+         vari_trainlabel,
+         rate.pos_neg,
+         in_dir,file_feature_predix,
+         out_dir,file_svm_predix)  
+  }
 
 mapply(exec,
        data.alluser,data.item,
@@ -86,12 +72,4 @@ mapply(exec,
        file_feature_predix,
        file_svm_predix,
        in_dir,out_dir)
-=======
-#   
-#   svmf(test_label_start,
-#        itr,ite,
-#        vari_trainlabel,
-#        rate.pos_neg,
-#        in_dir,file_feature_predix,
-#        out_dir,file_svm_predix)
->>>>>>> origin/master
+
