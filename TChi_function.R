@@ -2,13 +2,13 @@
 #   data_seperate,feature,model
 
 ####################################################################################################################
-data_seperate <- function(data.alluser,data.item,
+data_seperate <- function(user,data.item,
                           test_label_start,
                           itr, ite,
                           vari_trainlabel,
                           Data_dir,file_out_predix) {
 # function: data_seperate
-# describtion: seperate
+# describtion: seperate 
 # args:
 #     test_label_start: start time of test label to calculate the rest time with itr,ite and vari_trainlabel
 #     itr: interval of train data
@@ -30,11 +30,7 @@ data_seperate <- function(data.alluser,data.item,
     if (vari_trainlabel == 1)train_label_end <- test_end
     if (vari_trainlabel == 0)train_label_end <- test_start + 1
     train_end <- train_label_start
-    train_start <- train_end - itr
-  
-  # Data
-    user = data.alluser
-    #out_file = paste('TChi_trainset_testset_specuser_',itr,'_',ite,'.Rda', sep='')   
+    train_start <- train_end - itr  
     
   # train
     data.train <- subset(user, time >= train_start & time < train_end)
@@ -68,8 +64,7 @@ feature_each <- function(ds,
                          last_date,
                          max_len) {
   # time calculate and sort by ui
-    ds$time_before <- last_date - ds$time
-    #ds <- ds[,c('user_id','item_id','behavior_type','time_before','ui')]
+    ds$time_before <- as.numeric(as.POSIXct(last_date) - ds$time)
     ds <- ds[with(ds, order(user_id,item_id)),]   #order
     uipair <- ds[!duplicated(ds['ui']),c('user_id','item_id','ui')]
     len_uipair <- nrow(uipair)
@@ -86,9 +81,12 @@ feature_each <- function(ds,
   # feature generate
   # bt* means count number of behavior *
   # bt*_t means mean time before predict
-    ftr <- data.frame(matrix(0,nrow = len_uipair,ncol = 9))
     colname <- c('user_id','item_id','ui',
-                       'btA','btB','btC','btA_t','btB_t','btC_t')
+                 'item_category','user_geohash','item_geohash'
+                 'btA','btB','btC',
+                 'btA_t','btB_t','btC_t'
+                 )
+    ftr <- data.frame(matrix(0,nrow = len_uipair,ncol = length(colname)))
     colnames(ftr) <- colname
     ftr[,c('user_id','item_id','ui')] <- uipair
     for (i in 1:3) {
@@ -97,7 +95,7 @@ feature_each <- function(ds,
       a <- tapply(sset$ui,ff,length)
       b <- tapply(sset$time_before,ff,mean)
       c <- unique(as.character(sset$ui))
-      ftr[match(c,ftr$ui),c(colname[i+3],colname[i+6])] <- c(as.numeric(a),as.numeric(b))      
+      ftr[match(c,ftr$ui),c(colname[i+5],colname[i+8])] <- c(as.numeric(a),as.numeric(b))      
     }
   # return
     return(list('feature' = ftr,'uipair_len' = len_uipair))
@@ -191,7 +189,7 @@ svmf <- function(test_label_start,
     file_name <- paste(file_out_predix,itr,ite,vari_trainlabel,rate.pos_neg,sep='_')
     out_file <- paste(out_dir,file_name,'.Rda',sep='')
     csv_name <- paste(out_dir,file_name,'.csv',sep='')
-    write.csv(file = csv_name, x = pred_posui)
+    write.csv(file = csv_name, x = pred_posui, row.names=FALSE)
     save(pred_posui,file = out_file)
     print(paste('end_time:',date()))
 }

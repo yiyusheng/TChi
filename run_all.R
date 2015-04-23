@@ -12,35 +12,17 @@
 
   setwd(Git_dir)
   source('TChi_function.R')
-  
-# parameters
-  test_label_start <- as.Date('2014-12-18')
-  itrain <- c(27,25,25,20,20,20,20) 
-  itest <- c(1,1,3,1,3,5,7)
-  vari_trainlabel <- 0
-  rate <- c(10,30,50,70,100)
-  
-# file name
-  file_sep_predix <- 'ds'
-  file_feature_predix <- 'dsf'
-  file_svm_predix <- 'svm'
-  in_dir <- Data_dir
-  out_dir <- Data_dir
-  
-# load data
-  load(paste(Data_dir,'TChi_data.Rda',sep=''))
 
-# EXEC function
-  exec <- function(data.alluser,data.item,
-                   test_label_start,
+# function
+  exec <- function(test_label_start,
                    itr, ite, rate.pos_neg,
                    vari_trainlabel,
                    file_sep_predix,
                    file_feature_predix,
                    file_svm_predix,
                    in_dir,out_dir) {
-    
-    print(paste(itr,ite,rate.pos_neg))
+    if (itr + ite > 28)next
+    print(paste(itr,ite,rate.pos_neg,sep='_'))
     
     data_seperate(data.alluser,data.item,
                   test_label_start,
@@ -63,11 +45,32 @@
          out_dir,file_svm_predix)  
   }
 
-mapply(exec,
-       data.alluser,data.item,
+# parameters
+  test_label_start <- as.Date('2014-12-18')
+  itrain <- c(27,25,20) 
+  itest <- c(1,3,5,7)
+  vari_trainlabel <- c(0,1)
+  rate <- c(10,20,50,100,200,500,1000)
+  para <- expand.grid(itr = itrain, ite = itest,
+                      vari = vari_trainlabel, rate = rate)
+  
+# file name
+  file_sep_predix <- 'ds'
+  file_feature_predix <- 'dsf'
+  file_svm_predix <- 'svm'
+  in_dir <- Data_dir
+  out_dir <- Data_dir
+  
+# load data
+  load(paste(Data_dir,'TChi_data_spec.Rda',sep=''))
+  assign("data.alluser",data.alluser,envir = .GlobalEnv)
+  assign("data.item",data.item,envir = .GlobalEnv)
+
+# mapply
+  mapply(exec,
        test_label_start,
-       itrain, itest, rate[100],
-       vari_trainlabel,
+       para$itr, para$ite, 
+       para$rate,para$vari,
        file_sep_predix,
        file_feature_predix,
        file_svm_predix,
