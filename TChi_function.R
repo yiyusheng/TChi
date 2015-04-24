@@ -46,15 +46,19 @@ data_seperate <- function(user,data.item,
   data.train_neg <- subset(data.train, !(data.train$ui %in% label.train$ui))
   
   # test: reduce by match item in data.item
-  data.test <- subset(user, time >= test_start & time < test_end 
-                      & data.test$item_id %in% data.item$item_id)
+  data.test <- subset(user, time >= test_start & time < test_end)
+  data.test <- subset(data.test, item_id %in% data.item$item_id)
+  data.test_label <- subset(user, time >= test_label_start 
+                            & time < test_label_start + 24*60*60
+                            & behavior_type == 4)
+  data.test_label <- data.test_label[!duplicated(data.test_label['ui']),]
   
   # save
   file_name <- paste(file_out_predix,itr,ite,vari_trainlabel,sep='_')
   out_file <- paste(Data_dir,file_name,'.Rda',sep = '')
   save(data.train_neg,
        data.train_pos,data.train_pos_rmna,
-       data.test,
+       data.test,data.test_label,
        file = out_file)
   print(paste('end_time:',date()))
 }
@@ -64,7 +68,7 @@ feature_each <- function(ds,
                          last_date,
                          max_len) {
   # time calculate and sort by ui.(hours)
-  ds$time_before <- as.numeric(as.POSIXct(last_date) - ds$time)*24
+  ds$time_before <- as.numeric(as.POSIXct(last_date) - ds$time)
   ds <- ds[with(ds, order(user_id,item_id)),]   #order
   uipair <- ds[!duplicated(ds['ui']),c('user_id','item_id','ui',
                                        'user_geohash','item_category','item_geohash')]
@@ -92,11 +96,12 @@ feature_each <- function(ds,
   ftr[,c('user_id','item_id','ui','user_geohash','item_category','item_geohash')] <- uipair
   for (i in 1:3) {
     sset <- subset(reduce.ds,behavior_type == i)
-    ff <- as.numeric(sset$ui)
-    a <- tapply(sset$ui,ff,length)
-    b <- tapply(sset$time_before,ff,mean)
-    c <- unique(as.character(sset$ui))
-    ftr[match(c,ftr$ui),c(colname[i+6],colname[i+9])] <- c(as.numeric(a),as.numeric(b))      
+    ff <- as.numeric(as.character(sset$ui))
+    a <- tapply(ff,ff,length)
+    b <- tapply(as.numeric(sset$time_before),ff,mean)
+    c <- unique(ff)
+    ftr[match(c,as.numeric(as.character(ftr$ui))),
+        c(colname[i+6],colname[i+9])] <- c(as.numeric(a),as.numeric(b))      
   }
   # return
   return(list('feature' = ftr,'uipair_len' = len_uipair))
@@ -138,7 +143,7 @@ feature_all <- function(test_label_start,
   # save
   file_name <- paste(file_out_predix,itr,ite,vari_trainlabel,rate.pos_neg,sep='_')
   out_file <- paste(out_dir,file_name,'.Rda',sep = '')
-  save(ftr.test,ftr.train_neg,ftr.train_pos,file = out_file)
+  save(ftr.test,ftr.train_neg,ftr.train_pos,data.test_label,file = out_file)
   print(paste('end_time:',date()))
 }
 
@@ -147,6 +152,7 @@ svmf <- function(test_label_start,
                  itr,ite,
                  vari_trainlabel,
                  rate.pos_neg,
+                 cost,
                  in_dir,file_in_predix,
                  out_dir,file_out_predix){
   # load library
@@ -170,17 +176,15 @@ svmf <- function(test_label_start,
   num_field <- c('user_geohash','item_category','item_geohash',
                  'btA','btB','btC',
                  'btA_t','btB_t','btC_t')
-#   num_field <- c('btA','btB','btC',
-#                  'btA_t','btB_t','btC_t')
-  x <- ftr.train[,num_field]
-  x <- as.matrix(x)
+  #   num_field <- c('btA','btB','btC',
+  #                  'btA_t','btB_t','btC_t')
+  x <- as.matrix(ftr.train[,num_field])
   y <- as.numeric(ftr.train$class)
   df <- data.frame(x = x, y = y)
-  model <- svm(y ~ x, data = df, type="C-classification", cost = 10, kernel = 'radial', prob = TRUE)
+  model <- svm(y ~ x, data = df, type="C-classification", cost, kernel = 'radial', prob = TRUE)
   
   # test
-  x <- ftr.test[,num_field]
-  x <- as.matrix(x)
+  x <- as.matrix(ftr.test[,num_field])
   result <- predict(model, newdata = data.frame(x = x), prob = TRUE)
   num.result <- as.numeric(result) - 1
   
@@ -199,7 +203,7 @@ evaluate <- function(test_label_start,
                      vari_trainlabel,
                      rate.pos_neg,
                      in_dir,file_in_predix){
-
+  
   # predict data
   file_name <- paste(file_in_predix,itr,ite,vari_trainlabel,rate.pos_neg,sep='_')
   in_file <- paste(in_dir,file_name,'.Rda',sep='')
@@ -225,7 +229,6 @@ evaluate <- function(test_label_start,
   }
   return(r)
 }
-
 
 
 

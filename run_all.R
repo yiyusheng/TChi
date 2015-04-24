@@ -1,7 +1,7 @@
 ## run all function
 
 # preprocessing
-# rm(list = ls())
+rm(list = ls())
 if (.Platform$OS.type == 'windows') {
   Git_dir <- "D:/Git/TChi/"
   Data_dir <- "D:/Data/TChi/"
@@ -18,6 +18,7 @@ exec <- function(test_label_start,
                  itr, ite,
                  vari_trainlabel,
                  rate.pos_neg,
+                 svm_cost,
                  file_sep_predix,
                  file_feature_predix,
                  file_svm_predix,
@@ -25,39 +26,37 @@ exec <- function(test_label_start,
   if (itr + ite <= 28) {
     print(paste(itr,ite,rate.pos_neg,sep='_'))
     
-#     data_seperate(data.alluser,data.item,
-#                   test_label_start,
-#                   itr, ite,
-#                   vari_trainlabel,
-#                   in_dir,file_sep_predix)
+    data_seperate(data.alluser,data.item,
+                  test_label_start,
+                  itr, ite,
+                  vari_trainlabel,
+                  in_dir,file_sep_predix)
     
-#     feature_all(test_label_start,
-#                 itr,ite,
-#                 vari_trainlabel,
-#                 rate.pos_neg,
-#                 in_dir,file_sep_predix,
-#                 out_dir,file_feature_predix)
+    feature_all(test_label_start,
+                itr,ite,
+                vari_trainlabel,
+                rate.pos_neg,
+                in_dir,file_sep_predix,
+                out_dir,file_feature_predix)
     
     svmf(test_label_start,
          itr,ite,
          vari_trainlabel,
          rate.pos_neg,
+         cost,
          in_dir,file_feature_predix,
          out_dir,file_svm_predix) 
   }
 }
 
 # parameters
-eval_only <- 1
+eval_only <- 0
 test_label_start <- as.POSIXct('2014-12-18',format='%Y-%m-%d')
-# itrain <- c(27,25,20) 
-# itest <- c(1,3,5,7)
-# vari_trainlabel <- c(0,1)
-# rate <- c(10,50,100,500,1000)
-itrain <- c(25)
-itest <- c(1)
+itrain <- c(25,15,7)
+itest <- c(1,3)
 vari_trainlabel <- 0
-rate <- c(30)
+rate <- c(1,5,10,20)
+svm_cost <- c(0.1,1,10)
 para <- expand.grid(itr = itrain, ite = itest,
                     vari = vari_trainlabel, rate = rate)
 
@@ -70,7 +69,7 @@ in_dir <- Data_dir
 out_dir <- Data_dir
 
 # load data
-# load(paste(Data_dir,'TChi_data.Rda',sep=''))
+load(paste(Data_dir,'TChi_data.Rda',sep=''))
 #   data.alluser <- data.specuser
 #   save(data.alluser,data.specuser,data.item,file = paste(Data_dir,'TChi_specdata.Rda',sep=''))
 #   load(paste(Data_dir,'TChi_specdata.Rda',sep=''))
@@ -89,6 +88,7 @@ if (!eval_only){
          test_label_start,
          para$itr, para$ite, 
          para$vari,para$rate,
+         para$svm_cost
          file_sep_predix,
          file_feature_predix,
          file_svm_predix,
@@ -96,12 +96,9 @@ if (!eval_only){
 }
 
 # result evaluation
-
-
 eva <- mapply(evaluate,
-       test_label_start,
-       para$itr, para$ite, 
-       para$vari,para$rate,
-       in_dir,file_svm_predix)
-save(eva,file = 'eval.Rda')
-
+              test_label_start,
+              para$itr, para$ite, 
+              para$vari,para$rate,
+              in_dir,file_svm_predix)
+save(eva,file = paste(Data_dir,'eval.Rda',sep='')

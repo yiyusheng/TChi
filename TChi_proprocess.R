@@ -27,10 +27,6 @@
   order.item <- dup.item[order(dup.item["item_id"]),]
   ismember.user <- order.user[order.user$item_id %in% order.item$item_id,]
   
-# length
-  len.item <- dim(order.item)[1]
-  len.user <- length(unique(ismember.user$user_id))
-  
 # rename
   data.specuser <- ismember.user
   data.alluser <- order.user
@@ -54,8 +50,8 @@
   data.alluser$user_geohash <- as.numeric(user_g)
   
 # type convert(time -> Date)
-  data.specuser$time <- as.POSIXct(data.specuser$time, format = "%Y-%m-%d %H")
-  data.alluser$time <- as.POSIXct(data.alluser$time, format = "%Y-%m-%d %H")
+  data.specuser$time <- as.numeric(as.POSIXct(data.specuser$time, format = "%Y-%m-%d %H"))
+  data.alluser$time <- as.numeric(as.POSIXct(data.alluser$time, format = "%Y-%m-%d %H"))
 
 # item_geohash add
   data.alluser$item_geohash <- rep(1,nrow(data.alluser))
@@ -71,4 +67,7 @@
   data.specuser$ic <- as.factor(data.specuser$item_category*10000000000+data.specuser$item_id)
   data.item$ic <- as.factor(data.item$item_category*10000000000+data.item$item_category)
 # save
+#   data.specuser <- data.frame(as.matrix(data.specuser))
+#   data.alluser <- data.frame(as.matrix(data.alluser))
+#   data.item <- data.frame(as.matrix(data.item))
   save(data.specuser,data.alluser,data.item,file = paste(Data_dir,'TChi_data.Rda',sep=''))
