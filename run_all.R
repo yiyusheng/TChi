@@ -23,42 +23,44 @@ exec <- function(test_label_start,
                  file_feature_predix,
                  file_svm_predix,
                  in_dir,out_dir) {
-  if (itr + ite <= 28) {  
-    mapply(data_seperate,
-            test_label_start,
-            itr, ite,
-            vari_trainlabel,
-            in_dir,file_sep_predix)
-    
-    para_feature <- expand.grid(itr = itr,ite = ite,rate = rate)
-    mapply(feature_all,
-           test_label_start,
-           para_feature$itr,para_feature$ite,
-           vari_trainlabel,
-           para_feature$rate,
-           in_dir,file_sep_predix,
-           out_dir,file_feature_predix)
-    
-    para_svm <- expand.grid(itr = itr,ite = ite,rate = rate,cost = svm_cost)
-    mapply(svmf,
-           test_label_start,
-           para_svm$itr,para_svm$ite,
-           vari_trainlabel,
-           para_svm$rate,
-           para_svm$cost,
-           in_dir,file_feature_predix,
-           out_dir,file_svm_predix)
-  }
+  para_sep <- expand.grid(itr = itr, ite = ite)
+  if (enable[1])mapply(data_seperate,
+                        test_label_start,
+                        para_sep$itr, para_sep$ite,
+                        vari_trainlabel,
+                        in_dir,file_sep_predix)
+  
+  para_feature <- expand.grid(itr = itr,ite = ite,rate = rate)
+  if (enable[2])mapply(feature_all,
+                       test_label_start,
+                       para_feature$itr,para_feature$ite,
+                       vari_trainlabel,
+                       para_feature$rate,
+                       in_dir,file_sep_predix,
+                       out_dir,file_feature_predix)
+  
+  para_svm <- expand.grid(itr = itr,ite = ite,rate = rate,cost = svm_cost)
+  if (enable[3])mapply(svmf,
+                       test_label_start,
+                       para_svm$itr,para_svm$ite,
+                       vari_trainlabel,
+                       para_svm$rate,
+                       para_svm$cost,
+                       in_dir,file_feature_predix,
+                       out_dir,file_svm_predix)
 }
 
 # parameters
 eval_only <- 0
 test_label_start <- as.POSIXct('2014-12-18',format='%Y-%m-%d')
-itr <- c(25)
-ite <- c(1)
+itr <- c(25,7)
+ite <- c(1,3,5)
 vari_trainlabel <- 0
-rate <- c(1,5)
-svm_cost <- c(0.1,1)
+rate <- c(10)
+svm_cost <- c(1)
+#enable spe,ftr,svm,eval
+enable <- matrix(c(0,0,1,1),1,4)
+assign('enable',enable,envir = .GlobalEnv)
 
 # file name
 file_sep_predix <- 'ds'
@@ -103,10 +105,13 @@ if (!eval_only){
 
 # result evaluation
 para_eva <- expand.grid(itr = itr,ite = ite,rate = rate,cost = svm_cost)
-eva <- mapply(evaluate,
-              test_label_start,
-              para_eva$itr, para_eva$ite, 
-              vari_trainlabel,para_eva$rate,
-              para_eva$cost,
-              in_dir,file_svm_predix)
-save(eva,file = paste(Data_dir,'eval.Rda',sep=''))
+if (enable[4]){
+  eva <- mapply(evaluate,
+                test_label_start,
+                para_eva$itr, para_eva$ite, 
+                vari_trainlabel,para_eva$rate,
+                para_eva$cost,
+                in_dir,file_svm_predix)
+  save(eva,file = paste(Data_dir,'eval.Rda',sep=''))
+}
+
