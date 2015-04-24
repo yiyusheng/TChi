@@ -23,6 +23,7 @@ exec <- function(test_label_start,
                  file_feature_predix,
                  file_svm_predix,
                  in_dir,out_dir) {
+  
   para_sep <- expand.grid(itr = itr, ite = ite)
   if (enable[1])mapply(data_seperate,
                         test_label_start,
@@ -39,8 +40,9 @@ exec <- function(test_label_start,
                        in_dir,file_sep_predix,
                        out_dir,file_feature_predix)
   
+  r <- 0
   para_svm <- expand.grid(itr = itr,ite = ite,rate = rate,cost = svm_cost)
-  if (enable[3])mapply(svmf,
+  if (enable[3])r <- mapply(svmf,
                        test_label_start,
                        para_svm$itr,para_svm$ite,
                        vari_trainlabel,
@@ -48,18 +50,24 @@ exec <- function(test_label_start,
                        para_svm$cost,
                        in_dir,file_feature_predix,
                        out_dir,file_svm_predix)
+  return(r)
 }
 
 # parameters
 eval_only <- 0
 test_label_start <- as.POSIXct('2014-12-18',format='%Y-%m-%d')
-itr <- c(25,7)
-ite <- c(1,3,5)
+assign("test_label_start",test_label_start,envir = .GlobalEnv)
+# time
+itr <- c(3)
+ite <- c(3)
+# vari
 vari_trainlabel <- 0
+# rate for feature only
 rate <- c(10)
+# cost for svm only
 svm_cost <- c(1)
 #enable spe,ftr,svm,eval
-enable <- matrix(c(0,0,1,1),1,4)
+enable <- matrix(c(1,1,1,1),1,4)
 assign('enable',enable,envir = .GlobalEnv)
 
 # file name
@@ -84,34 +92,32 @@ if (.Platform$OS.type == 'windows') {
 assign("data.alluser",data.alluser,envir = .GlobalEnv)
 assign("data.item",data.item,envir = .GlobalEnv)
 
-realbuy <- subset(data.alluser, behavior_type == 4 
+testbuy <- 0
+testbuy <- subset(data.alluser, behavior_type == 4 
                   & time >= test_label_start
                   & time < (test_label_start + 24*60*60)
                   & item_id %in% data.item$item_id)
-assign("realbuy",realbuy,envir = .GlobalEnv)
-
+assign("testbuy",testbuy,envir = .GlobalEnv)
 # data seperate->feature extraction->generate result
-if (!eval_only){
-  exec(
-  test_label_start,
-  itr, ite, 
-  vari_trainlabel,rate,
-  svm_cost,
-  file_sep_predix,
-  file_feature_predix,
-  file_svm_predix,
-  in_dir,out_dir)
-}
+eva <- exec(test_label_start,
+            itr, ite, 
+            vari_trainlabel,rate,
+            svm_cost,
+            file_sep_predix,
+            file_feature_predix,
+            file_svm_predix,
+            in_dir,out_dir)
+
 
 # result evaluation
-para_eva <- expand.grid(itr = itr,ite = ite,rate = rate,cost = svm_cost)
-if (enable[4]){
-  eva <- mapply(evaluate,
-                test_label_start,
-                para_eva$itr, para_eva$ite, 
-                vari_trainlabel,para_eva$rate,
-                para_eva$cost,
-                in_dir,file_svm_predix)
-  save(eva,file = paste(Data_dir,'eval.Rda',sep=''))
-}
+# para_eva <- expand.grid(itr = itr,ite = ite,rate = rate,cost = svm_cost)
+# if (enable[4]){
+#   eva <- mapply(evaluate,
+#                 test_label_start,
+#                 para_eva$itr, para_eva$ite, 
+#                 vari_trainlabel,para_eva$rate,
+#                 para_eva$cost,
+#                 in_dir,file_svm_predix)
+#   save(eva,file = paste(Data_dir,'eval.Rda',sep=''))
+# }
 

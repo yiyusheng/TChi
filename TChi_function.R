@@ -44,7 +44,6 @@ data_seperate <- function(test_label_start,
     
     
     # seperate posivite data and negtive data in train (UIpair in label.train)
-    #data.train_pos <- merge(x = label.train, y = data.train, all.x = TRUE)
     data.train_pos <- 0 #may lead some problem
     data.train_pos_rmna <- subset(data.train, data.train$ui %in% label.train$ui)
     data.train_neg <- subset(data.train, !(data.train$ui %in% label.train$ui))
@@ -72,7 +71,9 @@ feature_each <- function(ds,
                          last_date,
                          max_len) {
   # time calculate and sort by ui.(hours)
-  ds$time_before <- as.numeric(as.POSIXct(last_date) - ds$time)
+  time_before <- last_date - ds$time
+  units(time_before) <- 'hours'
+  ds$time_before <- as.numeric(time_before)
   ds <- ds[with(ds, order(user_id,item_id)),]   #order
   uipair <- ds[!duplicated(ds['ui']),c('user_id','item_id','ui',
                                        'user_geohash','item_category','item_geohash')]
@@ -92,20 +93,39 @@ feature_each <- function(ds,
   # bt*_t means mean time before predict
   colname <- c('user_id','item_id','ui',
                'user_geohash','item_category','item_geohash',
-               'btA','btB','btC',
-               'btA_t','btB_t','btC_t'
-  )
+               'A_count', 'A_meanH', 'A_count6','A_count12','A_count24','A_count36','A_count48','A_countout',
+               'B_count', 'B_meanH', 'B_count6','B_count12','B_count24','B_count36','B_count48','B_countout',
+               'C_count', 'C_meanH', 'C_count6','C_count12','C_count24','C_count36','C_count48','C_countout')
+  fix_ncol <- 6
+  ftr_ncol <- 8
   ftr <- data.frame(matrix(0,nrow = len_uipair,ncol = length(colname)))
   colnames(ftr) <- colname
   ftr[,c('user_id','item_id','ui','user_geohash','item_category','item_geohash')] <- uipair
   for (i in 1:3) {
     sset <- subset(reduce.ds,behavior_type == i)
     idx <- as.numeric(as.character(sset$ui))
+    
     ftr1 <- tapply(idx,idx,length)
     ftr2 <- tapply(as.numeric(sset$time_before),idx,mean)
+    ftr3 <- tapply(as.numeric(sset$time_before),idx,function(x) sum(x<=6))
+    ftr4 <- tapply(as.numeric(sset$time_before),idx,function(x) sum(x<=12))
+    ftr5 <- tapply(as.numeric(sset$time_before),idx,function(x) sum(x<=24))
+    ftr6 <- tapply(as.numeric(sset$time_before),idx,function(x) sum(x<=36))
+    ftr7 <- tapply(as.numeric(sset$time_before),idx,function(x) sum(x<=48))
+    ftr8 <- tapply(as.numeric(sset$time_before),idx,function(x) sum(x>48))
+    ftr4 <- ftr4 - ftr3
+    ftr5 <- ftr5 - ftr4
+    ftr6 <- ftr6 - ftr5
+    ftr7 <- ftr7 - ftr6
     ui <- unique(idx)
-    ftr[match(ui,as.numeric(as.character(ftr$ui))),
-        c(colname[i+6],colname[i+9])] <- c(as.numeric(ftr1),as.numeric(ftr2))      
+    if (length(ui) > 0){
+      ftr[match(ui,as.numeric(as.character(ftr$ui))),
+              (1+fix_ncol+(i-1)*ftr_ncol):(fix_ncol+(i)*ftr_ncol)] <- 
+          cbind(as.numeric(ftr1),as.numeric(ftr2),as.numeric(ftr3),
+            as.numeric(ftr4),as.numeric(ftr5),as.numeric(ftr6),
+            as.numeric(ftr7),as.numeric(ftr8))
+    }
+ 
   }
   # return
   return(list('feature' = ftr,'uipair_len' = len_uipair))
@@ -128,6 +148,7 @@ feature_all <- function(test_label_start,
     print(paste('FEATURE:',
                 paste(itr,ite,vari_trainlabel,rate.pos_neg,sep='_'),
                 date()))
+   
     # predict parameter
     test_label_end <- test_label_start + 1*60*60*24
     test_end <- test_label_start
@@ -136,13 +157,23 @@ feature_all <- function(test_label_start,
     train_label_end <- test_end
     train_end <- train_label_start
     train_start <- train_end - itr*60*60*24
-    # feature_each
+    
+    #train buy
+    trainbuy <- subset(data.alluser, behavior_type == 4 
+                      & time >= train_label_start
+                      & time < (train_label_start + 24*60*60))
+    assign("trainbuy",trainbuy,envir = .GlobalEnv)
+#                       & item_id %in% data.item$item_id)
+
+    # feature_each for train_pos
     print(paste('train_pos: ', nrow(data.train_pos_rmna), 'lines',sep=''))
-    r <- feature_each(data.train_pos_rmna,test_end,0)
+    r <- feature_each(data.train_pos_rmna,train_end,0)
     ftr.train_pos <- r$feature
+    # train_end
     print(paste('train_neg: ', nrow(data.train_neg), 'lines',sep=''))
-    r <- feature_each(data.train_neg,test_end,r$uipair_len*rate.pos_neg)
+    r <- feature_each(data.train_neg,train_end,r$uipair_len*rate.pos_neg)
     ftr.train_neg <- r$feature
+    # test
     print(paste('test: ', nrow(data.test), 'lines',sep=''))
     r <- feature_each(data.test,test_end,0)
     ftr.test <- r$feature
@@ -179,40 +210,84 @@ svmf <- function(test_label_start,
     print(paste('SVM:',
                 paste(itr,ite,vari_trainlabel,rate.pos_neg,cost,sep='_'),
                 date()))
-    # train
+    
+    
+    # data standardization
     ftr.train_pos$class <- rep(1,nrow(ftr.train_pos))
     ftr.train_neg$class <- rep(0,nrow(ftr.train_neg))
     ftr.train <- rbind(ftr.train_pos,
-                       ftr.train_neg)
-#     num_field <- c('user_geohash','item_category','item_geohash',
-#                    'btA','btB','btC',
-#                    'btA_t','btB_t','btC_t')
-      num_field <- c('btA','btB','btC')
-    x <- as.matrix(ftr.train[,num_field])
-    y <- as.numeric(ftr.train$class)
-    df <- data.frame(x = x, y = y)
-    model <- svm(y ~ x, data = df, type="C-classification", cost = cost, kernel = 'radial', prob = TRUE)
+                       ftr.train_neg,
+                       row.names = FALSE)
     
-    # test
-    x <- as.matrix(ftr.test[,num_field])
-    result <- predict(model, newdata = data.frame(x = x), prob = TRUE)
-    num.result <- as.numeric(result) - 1
     
-    #eval for train
-#       eva <- data.frame(real = as.numeric(ftr.train$class),predict = num.result)
-#       TP <- nrow(subset(eva,real == 1 & predict == 1))
-#       FP <- nrow(subset(eva,real == 0 & predict == 1))
-#       FN <- nrow(subset(eva,real == 1 & predict == 0))
-#       prec <- TP/(TP + FP)
-#       rec <- TP/(TP + FN)
-#       f1 <- 2*prec*rec/(prec+rec)
-#       print(paste(f1,prec,rec,TP,sep='_'))
-    #eval for test
-    #real.ui <- as.numeric(as.character(realbuy$ui))
+    ftr.test$class <- 0
+    ftr.test$class <- as.integer(ftr.test$class)
+    if (exists('data.test_label') & nrow(data.test_label) > 0) {
+      idx <- ftr.test$ui %in% data.test_label$ui
+      ftr.test[idx,'class'] <- 1
+      ftr.test <- ftr.test[order(ftr.test$class,decreasing = TRUE),]
+    }
+    # more feature:time and day
+#     ftr.train$tdA <- ftr.train$btA / ftr.train$btA_t
+#     ftr.train$tdB <- ftr.train$btB / ftr.train$btB_t
+#     ftr.train$tdC <- ftr.train$btC / ftr.train$btC_t
+#     ftr.test$tdA <- ftr.test$btA / ftr.test$btA_t
+#     ftr.test$tdB <- ftr.test$btB / ftr.test$btB_t
+#     ftr.test$tdC <- ftr.test$btC / ftr.test$btC_t
+#     ftr.train[is.na(ftr.train)] <- 0
+#     ftr.test[is.na(ftr.test)] <- 0
+    # model establishment
+
+    num_field <- c('user_geohash','item_category','item_geohash',
+                   'A_count', 'A_meanH', 'A_count6','A_count12','A_count24','A_count36','A_count48','A_countout',
+                   'B_count', 'B_meanH', 'B_count6','B_count12','B_count24','B_count36','B_count48','B_countout',
+                   'C_count', 'C_meanH', 'C_count6','C_count12','C_count24','C_count36','C_count48','C_countout')
+#                    'tdA','tdB','tdC')
+#     model <- svm(rbind(ftr.train[,num_field],ftr.test[,num_field]),
+#                  c(ftr.train$class,ftr.test$class),
+    model <- svm(ftr.train[,num_field],
+                 ftr.train$class,
+                 type="C-classification", 
+                 cost = cost, 
+                 kernel = 'radial', 
+                 prob = TRUE)
+    # predict on train
+    result_train <- predict(model, newdata = data.frame(ftr.train[,num_field]), prob = TRUE)
+    ftr.train_predict <- ftr.train[result_train == 1,]
+    real_train <- subset(ftr.train,class == 1)
+    TP_train <- nrow(subset(ftr.train_predict,ftr.train_predict$ui %in% real_train$ui))
+    FP_train <- nrow(ftr.train_predict) - TP_train
+    FN_train <- nrow(real_train) -TP_train
+    prec_train <- TP_train/(TP_train + FP_train)
+    rec_train <- TP_train/(TP_train + FN_train)
+  
+    # predict on test
+    drop <- subset(ftr.test,A_count == 1 & C_count == 0 & C_count == 0)
+    result_test <- predict(model, newdata = data.frame(ftr.test[,num_field]), prob = TRUE)
+    ftr.test_predict <- ftr.test[result_test == 1,]
+    real_test <- data.test_label
+    TP <- nrow(subset(ftr.test_predict,ftr.test_predict$ui %in% real_test$ui))
+    FP <- nrow(ftr.test_predict) - TP
+    FN <- nrow(real_test) - TP
+    prec <- TP/(TP + FP)
+    rec <- TP/(FP + FN)
+    # save
+    r <- data.frame(para = as.character(in_name),
+                    prec = prec,
+                    rec = rec,
+                    f1 = 2*prec*rec/(prec + rec),
+                    len_prec = TP + FP,
+                    len_real = TP + FN,
+                    prec_train = prec_train,
+                    rec_train = rec_train,
+                    f1_train = 2*prec_train*rec_train/(prec_train+rec_train),
+                    len_prec_train = TP_train + FP_train,
+                    len_real = TP_train + FN_train)
     # predict result and save
-    pred_posui <- ftr.test[num.result == 1,1:2]
+    pred_posui <- ftr.test_predict[,1:2]
     write.csv(file = csv_file, x = pred_posui, row.names=FALSE)
     save(pred_posui,file = out_file)
+    return(r)
   }
   
 }
@@ -232,7 +307,7 @@ evaluate <- function(test_label_start,
     print(paste('EVALUATE: ',file_name))
     load(in_file)
     predict.ui <- pred_posui$user_id*10000000000+pred_posui$item_id
-    real.ui <- as.numeric(as.character(realbuy$ui))
+    real.ui <- as.numeric(as.character(testbuy$ui))
     
     # evaluation
     TP <- sum(predict.ui %in% real.ui)
