@@ -72,7 +72,7 @@ feature_each <- function(ds,
                          max_len) {
   # time calculate and sort by ui.(hours)
   time_before <- last_date - ds$time
-  units(time_before) <- 'hours'
+  units(time_before) <- 'Hours'
   ds$time_before <- as.numeric(time_before)
   ds <- ds[with(ds, order(user_id,item_id)),]   #order
   uipair <- ds[!duplicated(ds['ui']),c('user_id','item_id','ui',
