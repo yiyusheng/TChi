@@ -50,22 +50,22 @@ exec <- function(test_label_start,
                        para_svm$cost,
                        in_dir,file_feature_predix,
                        out_dir,file_svm_predix)
-  return(r)
+  print(r)
 }
 
 # parameters
 eval_only <- 0
-test_label_start <- as.POSIXct('2014-12-18',format='%Y-%m-%d')
+test_label_start <- as.POSIXct('2014-12-19',format='%Y-%m-%d')
 assign("test_label_start",test_label_start,envir = .GlobalEnv)
 # time
-itr <- c(3)
-ite <- c(3)
+itr <- c(25)
+ite <- c(1)
 # vari
 vari_trainlabel <- 0
 # rate for feature only
-rate <- c(10)
+rate <- c(50)
 # cost for svm only
-svm_cost <- c(1)
+svm_cost <- c(10)
 #enable spe,ftr,svm,eval
 enable <- matrix(c(1,1,1,1),1,4)
 assign('enable',enable,envir = .GlobalEnv)
@@ -79,15 +79,15 @@ in_dir <- Data_dir
 out_dir <- Data_dir
 
 # load data
-# load(paste(Data_dir,'TChi_data.Rda',sep=''))
+load(paste(Data_dir,'TChi_data.Rda',sep=''))
 # data.alluser <- data.specuser
 # save(data.alluser,data.specuser,data.item,
 #      file = paste(Data_dir,'TChi_specdata.Rda',sep=''))
-if (.Platform$OS.type == 'windows') {
-  load(paste(Data_dir,'TChi_specdata.Rda',sep=''))
-}else {
-  load(paste(Data_dir,'TChi_data.Rda',sep=''))
-}
+# if (.Platform$OS.type == 'windows') {
+#   load(paste(Data_dir,'TChi_specdata.Rda',sep=''))
+# }else {
+#   load(paste(Data_dir,'TChi_data.Rda',sep=''))
+# }
 
 assign("data.alluser",data.alluser,envir = .GlobalEnv)
 assign("data.item",data.item,envir = .GlobalEnv)
@@ -99,7 +99,7 @@ testbuy <- subset(data.alluser, behavior_type == 4
                   & item_id %in% data.item$item_id)
 assign("testbuy",testbuy,envir = .GlobalEnv)
 # data seperate->feature extraction->generate result
-eva <- exec(test_label_start,
+exec(test_label_start,
             itr, ite, 
             vari_trainlabel,rate,
             svm_cost,

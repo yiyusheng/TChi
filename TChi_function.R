@@ -238,13 +238,18 @@ svmf <- function(test_label_start,
 #     ftr.test[is.na(ftr.test)] <- 0
     # model establishment
 
+#     num_field <- c('A_count','A_count6','A_count12','A_count24','A_count36',
+#                    'B_count', 'B_count6','B_count12','B_count24','B_count36',
+#                    'C_count', 'C_count6','C_count12','C_count24','C_count36')
     num_field <- c('user_geohash','item_category','item_geohash',
-                   'A_count', 'A_meanH', 'A_count6','A_count12','A_count24','A_count36','A_count48','A_countout',
-                   'B_count', 'B_meanH', 'B_count6','B_count12','B_count24','B_count36','B_count48','B_countout',
-                   'C_count', 'C_meanH', 'C_count6','C_count12','C_count24','C_count36','C_count48','C_countout')
+               'A_count', 'A_meanH', 'A_count6','A_count12','A_count24','A_count36','A_count48','A_countout',
+               'B_count', 'B_meanH', 'B_count6','B_count12','B_count24','B_count36','B_count48','B_countout',
+               'C_count', 'C_meanH', 'C_count6','C_count12','C_count24','C_count36','C_count48','C_countout')    
 #                    'tdA','tdB','tdC')
 #     model <- svm(rbind(ftr.train[,num_field],ftr.test[,num_field]),
 #                  c(ftr.train$class,ftr.test$class),
+    ftr.train[1,9:ncol(ftr.train)] <- 1
+    ftr.test[1,9:ncol(ftr.test)] <- 1
     model <- svm(ftr.train[,num_field],
                  ftr.train$class,
                  type="C-classification", 
@@ -262,7 +267,8 @@ svmf <- function(test_label_start,
     rec_train <- TP_train/(TP_train + FN_train)
   
     # predict on test
-    drop <- subset(ftr.test,A_count == 1 & C_count == 0 & C_count == 0)
+    drop <- subset(ftr.test,!(A_count == 1 & C_count == 0 & C_count == 0))
+    ftr.test <- drop
     result_test <- predict(model, newdata = data.frame(ftr.test[,num_field]), prob = TRUE)
     ftr.test_predict <- ftr.test[result_test == 1,]
     real_test <- data.test_label
