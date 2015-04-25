@@ -63,9 +63,9 @@ ite <- c(1)
 # vari
 vari_trainlabel <- 0
 # rate for feature only
-rate <- c(50)
+rate <- c(100)
 # cost for svm only
-svm_cost <- c(10)
+svm_cost <- c(1)
 #enable spe,ftr,svm,eval
 enable <- matrix(c(1,1,1,1),1,4)
 assign('enable',enable,envir = .GlobalEnv)
@@ -79,15 +79,15 @@ in_dir <- Data_dir
 out_dir <- Data_dir
 
 # load data
-load(paste(Data_dir,'TChi_data.Rda',sep=''))
+# load(paste(Data_dir,'TChi_data.Rda',sep=''))
 # data.alluser <- data.specuser
 # save(data.alluser,data.specuser,data.item,
 #      file = paste(Data_dir,'TChi_specdata.Rda',sep=''))
-# if (.Platform$OS.type == 'windows') {
-#   load(paste(Data_dir,'TChi_specdata.Rda',sep=''))
-# }else {
-#   load(paste(Data_dir,'TChi_data.Rda',sep=''))
-# }
+if (.Platform$OS.type == 'windows') {
+  load(paste(Data_dir,'TChi_specdata.Rda',sep=''))
+}else {
+  load(paste(Data_dir,'TChi_data.Rda',sep=''))
+}
 
 assign("data.alluser",data.alluser,envir = .GlobalEnv)
 assign("data.item",data.item,envir = .GlobalEnv)
